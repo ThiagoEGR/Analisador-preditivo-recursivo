@@ -1,0 +1,245 @@
+from enum import Enum
+class Category(Enum):
+    SE = 1
+    ENTAO = 2
+    SENAO = 3
+    FIM = 4
+    ENQUANTO = 5
+    REPITA = 6
+    ID = 7
+    IGUAL = 8
+    OU = 9
+    E = 10
+    OPR = 11
+    OPA = 12
+    OPM = 13
+    POTENCIA = 14
+    ABRPAR = 15
+    FECPAR = 16
+    CTEI = 17
+    VERD = 18
+    FALSO = 19
+    PV = 20
+
+
+
+class Token(object):
+    def __init__(self, lexeme, category, position):
+        # lexema e uma String
+        self.lexeme = lexeme
+        # categoria e um Enum
+        self.category = category
+        # posicao array[linha,coluna]
+        self.position = position
+
+    def nextToken(self):
+        #Aqui deveria ser feito o metodo de ler o programa e retornar o proximo token.
+        return self
+
+class Sintatico(object):
+
+    def __init__(self, token):
+        self.token = token
+
+    def erro(self, token):
+        pass
+
+    def fLSent(self):
+        self.fSent()
+        self.fLSentr()
+
+    def fLSentr(self):
+        if self.token.category == Category.PV:
+            self.token = self.token.nextToken()
+            self.fSent()
+            self.fLSentr()
+
+        else:
+            return
+
+    def fSent(self):
+        if self.token.category == Category.SE:
+            self.fScond()
+
+        elif self.token.category == Category.ENQUANTO or self.token.category == Category.REPITA:
+            self.fSIter()
+
+        elif self.token.category == Category.ID:
+            self.fSAtr()
+
+        else:
+            print("'SE', 'ENQUANTO', 'REPITA', 'ID' esperados")
+            self.erro(self.token)
+
+    def fScond(self):
+        if self.token.category == Category.SE:
+            self.token = self.token.nextToken()
+            self.fEb()
+
+            if self.token.category == Category.ENTAO:
+                self.token = self.token.nextToken()
+                self.fLSent()
+
+                if self.token.category == Category.SENAO:
+                    self.token = self.token.nextToken()
+                    self.fLSent()
+
+                if self.token.category == Category.FIM:
+                    self.token = self.token.nextToken()
+
+                else:
+                    print("'FIM' esperado")
+                    self.erro(self.token)
+
+            else:
+                print("'ENTAO' esperado")
+
+    def fSIter(self):
+        if self.token.category == Category.ENQUANTO:
+            self.token = self.token.nextToken()
+            self.fEb()
+
+            if self.token.category == Category.REPITA:
+                self.token = self.token.nextToken()
+                self.fLSent()
+
+                if self.token.category == Category.FIM:
+                    self.token = self.token.nextToken()
+                else:
+                    print("'FIM' esperado")
+                    self.erro(self.token)
+
+            else:
+                print("'REPITA' esperado")
+                self.erro(self.token)
+
+
+        else:
+            self.token = self.token.nextToken()
+            self.fLSent()
+
+            if self.token.category == Category.ENQUANTO:
+                self.token = self.token.nextToken()
+                self.fEb()
+
+                if self.token.category == Category.FIM:
+                    self.token = self.token.nextToken()
+                else:
+                    print("'FIM' esperado")
+                    self.erro(self.token)
+
+            else:
+                print("'ENQUANTO' esperado")
+                self.erro(self.token)
+
+    def fSAtr(self):
+        if self.token.category == Category.ID:
+            self.token = self.token.nextToken()
+
+            if self.token.category == Category.IGUAL:
+                self.token = self.token.nextToken()
+                self.fExpr()
+            else:
+                print("'IGUAL' esperado")
+                self.erro(self.token)
+
+    def fExpr(self):
+        self.fEb()
+
+    def fEb(self):
+        self.fTb()
+        self.fEbr()
+
+    def fEbr(self):
+        if self.token.category == Category.OU:
+            self.token = self.token.nextToken()
+            self.fTb()
+            self.fEbr()
+
+        else:
+            return
+
+    def fTb(self):
+        self.fFb()
+        self.fTbr()
+
+    def fTbr(self):
+        if self.token.category == Category.E:
+            self.token = self.token.nextToken()
+            self.fFb()
+            self.fTbr()
+
+        else:
+            return
+
+    def fFb(self):
+        self.fEa()
+
+        if self.token.category == Category.OPR:
+            self.token = self.token.nextToken()
+            self.fEa()
+
+        else:
+            return
+
+    def fEa(self):
+        self.fTa()
+        self.fEar()
+
+    def fEar(self):
+        if self.token.category == Category.OPA:
+            self.token = self.token.nextToken()
+            self.fTa()
+            self.fEar()
+
+        else:
+            return
+
+    def fTa(self):
+        self.fPa()
+        self.fTar()
+
+    def fTar(self):
+        if self.token.category == Category.OPM:
+            self.token = self.token.nextToken()
+            self.fPa()
+            self.fTar()
+
+        else:
+            return
+
+    def fPa(self):
+        self.fFa()
+        if self.token.category == Category.POTENCIA:
+            self.token = self.token.nextToken()
+            self.fPa()
+        else:
+            return
+
+    def fFa(self):
+        if self.token.category == Category.ABRPAR:
+            self.token = self.token.nextToken()
+            self.fEb()
+
+            if self.token.category == Category.FECPAR:
+                self.token = self.token.nextToken()
+            else:
+                print("'FECPAR' esperado")
+                self.erro(self.token)
+
+        elif self.token.category == Category.ID:
+            self.token = self.token.nextToken()
+
+        elif self.token.category == Category.CTEI:
+            self.token = self.token.nextToken()
+
+        elif self.token.category == Category.VERD:
+            self.token = self.token.nextToken()
+
+        elif self.token.category == Category.FALSO:
+            self.token = self.token.nextToken()
+
+        else:
+            print("'ABRPAR', 'ID', 'CTEI', 'VERD', 'FALSO' esperado")
+            self.erro(self.token)
+
